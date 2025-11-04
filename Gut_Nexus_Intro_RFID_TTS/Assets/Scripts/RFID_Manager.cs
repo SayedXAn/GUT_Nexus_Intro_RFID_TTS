@@ -15,6 +15,9 @@ public class RFID_Manager : MonoBehaviour
     public GameObject introImageObject;
     public GameObject videoDisplayObject;
 
+    [Header("Video Output")]
+    public RenderTexture videoRenderTexture;
+
     private string currentRfidInput = "";
 
     void Start()
@@ -68,25 +71,24 @@ public class RFID_Manager : MonoBehaviour
         {
             Debug.Log("Welcome, " + foundGuest.guestName + "!");
 
-            if (welcomeAudioSource.isPlaying)
-            {
-                welcomeAudioSource.Stop();
-            }
+            CancelInvoke("StopVideoAndReturnToIntro");
+            if (welcomeAudioSource.isPlaying) welcomeAudioSource.Stop();
+            if (videoPlayer.isPlaying) videoPlayer.Stop();
 
             AudioClip clipToPlay = LoadGuestAudio(foundGuest.audioFilename);
             if (clipToPlay != null)
             {
                 welcomeAudioSource.PlayOneShot(clipToPlay);
+                Invoke("StopVideoAndReturnToIntro", clipToPlay.length);
+                Debug.Log("Scheduling video stop in " + clipToPlay.length + " seconds.");
             }
-
-            if (videoPlayer.isPlaying)
+            else
             {
-                videoPlayer.Stop();
+                Debug.Log("No audio clip. Video will play to completion.");
             }
 
             introImageObject.SetActive(false);
             videoDisplayObject.SetActive(true);
-
             videoPlayer.Play();
         }
         else
@@ -114,12 +116,42 @@ public class RFID_Manager : MonoBehaviour
         return clipToPlay;
     }
 
-    void OnVideoFinished(VideoPlayer vp)
+    void StopVideoAndReturnToIntro()
     {
-        Debug.Log("Video finished. Returning to intro image.");
+        Debug.Log("Media finished. Returning to intro image.");
+
+        if (videoPlayer.isPlaying) videoPlayer.Stop();
+        if (welcomeAudioSource.isPlaying) welcomeAudioSource.Stop();
 
         videoDisplayObject.SetActive(false);
         introImageObject.SetActive(true);
+
+        ClearRenderTexture();
+    }
+
+    void OnVideoFinished(VideoPlayer vp)
+    {
+        Debug.Log("Video file reached its end.");
+
+        CancelInvoke("StopVideoAndReturnToIntro");
+
+        StopVideoAndReturnToIntro();
+    }
+
+    void ClearRenderTexture()
+    {
+        if (videoRenderTexture == null)
+        {
+            Debug.LogError("Video Render Texture is NOT assigned in the Inspector!");
+            return;
+        }
+
+        RenderTexture.active = videoRenderTexture;
+
+        GL.Clear(true, true, Color.clear);
+
+        RenderTexture.active = null;
+        Debug.Log("Render Texture cleared.");
     }
 }
 

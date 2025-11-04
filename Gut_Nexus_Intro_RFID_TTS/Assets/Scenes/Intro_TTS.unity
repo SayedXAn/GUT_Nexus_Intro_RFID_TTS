@@ -816,6 +816,7 @@ MonoBehaviour:
   videoPlayer: {fileID: 631279782}
   introImageObject: {fileID: 1132137143}
   videoDisplayObject: {fileID: 237894413}
+  videoRenderTexture: {fileID: 8400000, guid: 4b342df3d9e538445837b40eba84c667, type: 2}
 --- !u!4 &1176238539
 Transform:
   m_ObjectHideFlags: 0
